@@ -109,6 +109,7 @@ int SDLRenderer::RenderThread() {
                       << SDL_GetError();
     return 1;
   }
+  //描画操作で使う色を設定
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 
   uint32_t start_time, duration;
@@ -131,8 +132,10 @@ int SDLRenderer::RenderThread() {
         if (width == 0 || height == 0)
           continue;
 
+        //既存のピクセルデータから新しいRGBサーフェイスを生成
         SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
             sink->GetImage(), width, height, 32, width * 4, 0, 0, 0, 0);
+        //サーフェイスからテクスチャを生成
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
         SDL_FreeSurface(surface);
 
@@ -142,10 +145,13 @@ int SDLRenderer::RenderThread() {
 
         // flip (自画像とか？)
         //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
+        //テクスチャの一部を現在のレンダーターゲットにコピー
         SDL_RenderCopy(renderer_, texture, &image_rect, &draw_rect);
 
+        //テクスチャを破棄
         SDL_DestroyTexture(texture);
       }
+      //レンダリングの結果を画面に反映
       SDL_RenderPresent(renderer_);
 
       if (dispatch_) {
