@@ -1,4 +1,5 @@
 #include "sdl_renderer.h"
+#include "SDL.h"
 
 #include <cmath>
 #include <csignal>
@@ -113,6 +114,9 @@ int SDLRenderer::RenderThread() {
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 
   uint32_t start_time, duration;
+  SDL_Surface* image;
+  //BMP形式の画像の読み込み
+  image = SDL_LoadBMP("C:/Users/16h02/Desktop/IMG_3274_Original.bmp");
   while (running_) {
     start_time = SDL_GetTicks();
     {
@@ -126,8 +130,10 @@ int SDLRenderer::RenderThread() {
         if (!sink->GetOutlineChanged())
           continue;
 
-        int width = sink->GetFrameWidth();
-        int height = sink->GetFrameHeight();
+        /*int width = sink->GetFrameWidth();
+        int height = sink->GetFrameHeight();*/
+        int width = image->w;
+        int height = image->h;
 
         if (width == 0 || height == 0)
           continue;
@@ -136,12 +142,14 @@ int SDLRenderer::RenderThread() {
         SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
             sink->GetImage(), width, height, 32, width * 4, 0, 0, 0, 0);
         //サーフェイスからテクスチャを生成
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
+        //SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, image);
         SDL_FreeSurface(surface);
 
         SDL_Rect image_rect = {0, 0, width, height};
-        SDL_Rect draw_rect = {sink->GetOffsetX(), sink->GetOffsetY(),
-                              sink->GetWidth(), sink->GetHeight()};
+        /*SDL_Rect draw_rect = {sink->GetOffsetX(), sink->GetOffsetY(),
+                              sink->GetWidth(), sink->GetHeight()};*/
+        SDL_Rect draw_rect = {0, 0, image->w, image->h};
 
         // flip (自画像とか？)
         //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
