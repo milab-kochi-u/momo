@@ -136,6 +136,12 @@ int SDLRenderer::RenderThread() {
   SDL_Surface* image, image2;
   //BMP形式の画像の読み込み
   image = SDL_LoadBMP("C:/Users/16h02/Desktop/IMG_3274_Original.bmp");
+  //画像の半透明化
+  //SDL_SetTextureAlphaMod(image, opacity);
+  //画像の半透明化
+  //SDL_SetWindowOpacityによりウィンドウの不透明度を設定する
+  //一つ目の引数は不透明度を設定するウィンドウ、二つ目は不透明度(opacity)の値
+  SDL_SetWindowOpacity(window_, 0.5);
   //白色を透過色の設定
   SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGB(image->format, 255, 255, 255));
   while (running_) {
