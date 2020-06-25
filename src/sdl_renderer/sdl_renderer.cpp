@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <csignal>
+//#include <opencv2/opencv.hpp>
 
 #include "api/video/i420_buffer.h"
 #include "rtc_base/logging.h"
@@ -27,10 +28,13 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
     return;
   }
 
+  //フルスクリーンにしたい場合、SDL_WINDOW_FULLSCREENを追加
+  //現在のデスクトップの解像度でフルスクリーンにしたい場合、SDL_WINDOW_FULLSCREEN_DESKTOPを追加
+  //枠をなくしたい場合、SDL_WINDOW_BORDERLESSを追加
   window_ =
       SDL_CreateWindow("Momo WebRTC Native Client", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, width_, height_,
-                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS);
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed "
                       << SDL_GetError();
@@ -40,6 +44,11 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
   if (fullscreen) {
     SetFullScreen(true);
   }
+
+  //ウィンドウを最前面表示にする
+  HWND activeWindowHandle = GetForegroundWindow();
+  SetWindowPos(activeWindowHandle, HWND_TOPMOST, 0, 0, 0, 0,
+               SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
 }
@@ -117,6 +126,8 @@ int SDLRenderer::RenderThread() {
   SDL_Surface* image;
   //BMP形式の画像の読み込み
   image = SDL_LoadBMP("C:/Users/16h02/Desktop/IMG_3274_Original.bmp");
+  // 透過色の設定
+  SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGB(image->format, 255, 255, 255));
   while (running_) {
     start_time = SDL_GetTicks();
     {
