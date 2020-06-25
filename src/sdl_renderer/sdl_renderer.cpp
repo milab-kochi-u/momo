@@ -1,5 +1,6 @@
 #include "sdl_renderer.h"
 #include "SDL.h"
+#include "SDL_syswm.h"
 
 #include <cmath>
 #include <csignal>
@@ -34,21 +35,30 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
   window_ =
       SDL_CreateWindow("Momo WebRTC Native Client", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, width_, height_,
-                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS);
+                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS );
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed "
                       << SDL_GetError();
     return;
   }
 
-  if (fullscreen) {
+  /*if (fullscreen) {
     SetFullScreen(true);
-  }
+  }*/
+
+  SDL_SysWMinfo wmInfo;
+  SDL_VERSION(&wmInfo.version);
+  SDL_GetWindowWMInfo(window_, &wmInfo);
+  HWND hwnd = wmInfo.info.win.window;
 
   //ウィンドウを最前面表示にする
-  HWND activeWindowHandle = GetForegroundWindow();
-  SetWindowPos(activeWindowHandle, HWND_TOPMOST, 0, 0, 0, 0,
+  //HWND activeWindowHandle = GetForegroundWindow();
+  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  //マウスイベントの透過
+  int extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+  SetWindowLong(hwnd, GWL_EXSTYLE,
+                extendedStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT);
 
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
 }
@@ -123,10 +133,10 @@ int SDLRenderer::RenderThread() {
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 
   uint32_t start_time, duration;
-  SDL_Surface* image;
+  SDL_Surface* image, image2;
   //BMP形式の画像の読み込み
   image = SDL_LoadBMP("C:/Users/16h02/Desktop/IMG_3274_Original.bmp");
-  // 透過色の設定
+  //白色を透過色の設定
   SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGB(image->format, 255, 255, 255));
   while (running_) {
     start_time = SDL_GetTicks();
